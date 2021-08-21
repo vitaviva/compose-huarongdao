@@ -1,53 +1,42 @@
 package com.jetgame.huarongdao
 
-import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.unit.IntOffset
 
+const val boardGrid = 150/*px*/
+const val boardWidth = boardGrid * 4
+const val boardHeight = boardGrid * 5
 
-sealed class Chess(val name: String, val color: Color, val w: Int, val h: Int) {
-    operator fun plus(offset: Offset): ChessOffset {
-        return ChessOffset(this, offset)
-    }
-}
+data class Chess(
+    val name: String,
+    val color: Color,
+    val w: Int,
+    val h: Int,
+    val offset: IntOffset = IntOffset(0, 0) /*px*/
+)
 
-object Zhang : Chess("张飞", Color.Gray, 1, 2)
-object Caoco : Chess("曹操", Color.White, 2, 2)
-object Huang : Chess("黄忠", Color.Yellow, 1, 2)
-object Zhaoy : Chess("赵云", Color.Blue, 1, 2)
-object Macho : Chess("马超", Color.LightGray, 1, 2)
-object Guany : Chess("关羽", Color.Red, 2, 1)
-data class Zuuu(val index: Int) : Chess("卒", Color.Green, 1, 1)
+fun Chess.moveBy(offset: IntOffset) = copy(offset = this.offset + offset)
+fun Chess.moveByX(x: Int) = moveBy(IntOffset(x, 0))
+fun Chess.moveByY(y: Int) = moveBy(IntOffset(0, y))
+fun Chess.moveToX(x: Int) = copy(offset = offset.copy(x = x))
+fun Chess.moveToY(y: Int) = copy(offset = offset.copy(y = y))
 
-val boardUnit = 50/*dp*/
-val boardWidth = boardUnit * 4
-val boardHeight = boardUnit * 5
+val Chess.width get() = w * boardGrid
+val Chess.height get() = h * boardGrid
+val Chess.left get() = offset.x
+val Chess.top get() = offset.y
+val Chess.right get() = left + width
+val Chess.bottom get() = top + height
 
-data class ChessOffset(val chess: Chess, val offset: Offset)
+infix fun Chess.isToRightOf(other: Chess) =
+    (left >= other.right) && ((top in other.top until other.bottom) || (bottom in other.top + 1 until other.bottom))
 
+infix fun Chess.isToLeftOf(other: Chess) =
+    (right <= other.left) && ((top in other.top until other.bottom) || (bottom in other.top + 1 until other.bottom))
 
-@OptIn(ExperimentalStdlibApi::class)
-val startBoard: Map<Chess, Pair<Int, Int>> = buildMap {
+infix fun Chess.isAboveOf(other: Chess) =
+    (bottom <= other.top) && ((left in other.left until other.right) || (right in other.left + 1 until other.right))
 
-    put(Zhang, 0 to 0)
-    put(Caoco, 1 to 0)
-    put(Huang, 3 to 0)
-    put(Zhaoy, 0 to 2)
-    put(Macho, 3 to 2)
-    put(Guany, 1 to 2)
-    put(Zuuu(1), 0 to 4)
-    put(Zuuu(2), 1 to 4)
-    put(Zuuu(3), 2 to 4)
-    put(Zuuu(4), 3 to 4)
-}
+infix fun Chess.isBelowOf(other: Chess) =
+    (top >= other.bottom) && ((left in other.left until other.right) || (right in other.left + 1 until other.right))
 
-
-fun Map<Chess, Pair<Int, Int>>.toOffset(density: Float) =
-    entries.map {
-        ChessOffset(
-            it.key,
-            Offset(
-                (it.value.first * boardUnit * density),
-                (it.value.second * boardUnit * density)
-            )
-        )
-    }

@@ -5,12 +5,14 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.gestures.detectDragGestures
+import androidx.compose.foundation.gestures.detectHorizontalDragGestures
+import androidx.compose.foundation.gestures.detectVerticalDragGestures
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.width
+import androidx.compose.material.Button
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Surface
 import androidx.compose.material.Text
@@ -18,6 +20,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -26,9 +29,9 @@ import androidx.compose.ui.input.pointer.consumeAllChanges
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import com.jetgame.huarongdao.ui.theme.ComposehuarongdaoTheme
+import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
 
 class MainActivity : ComponentActivity() {
@@ -40,16 +43,24 @@ class MainActivity : ComponentActivity() {
                 // A surface container using the 'background' color from the theme
                 Surface(color = MaterialTheme.colors.background) {
 
-                    val density = LocalDensity.current
-                    var chessState: List<ChessOffset> by remember {
-                        mutableStateOf(startBoard.toOffset(density.density))
+                    var chessState: List<Chess> by remember {
+                        mutableStateOf(opening.toList())
                     }
 
                     ChessBoard(
-                        chesses = chessState
-                    ) {
-                        chessState = chessState.moveBy(it)
-
+                        chessList = chessState,
+                        onRest = {
+                            chessState = opening.toList()
+                        }
+                    ) { cur, x, y ->
+                        chessState = chessState.map {
+                            if (it.name == cur) {
+                                if (x != 0) it.checkAndMoveX(x, chessState)
+                                else it.checkAndMoveY(y, chessState)
+                            } else {
+                                it
+                            }
+                        }
                     }
                 }
             }
@@ -57,54 +68,89 @@ class MainActivity : ComponentActivity() {
     }
 }
 
-@Composable
-fun ChessBoard(
-    chesses: List<ChessOffset>,
-    onMove: (offset: ChessOffset) -> Unit = {}
-) {
-    Box(Modifier.fillMaxSize()) {
-        Box(
-            Modifier
-                .width(boardWidth.dp)
-                .height(boardHeight.dp)
-                .border(1.dp, Color.Cyan)
-                .align(Alignment.TopCenter)
-        ) {
-            chesses.forEach {
-                Box(
-                    Modifier
-                        .offset { IntOffset(it.offset.x.roundToInt(), it.offset.y.roundToInt()) }
-                        .width((it.chess.w * boardUnit).dp)
-                        .height((it.chess.h * boardUnit).dp)
-                        .border(1.dp, Color.Black)
-                        .background(it.chess.color)
-                        .pointerInput(Unit) {
-                            detectDragGestures { change, dragAmount ->
-                                change.consumeAllChanges()
-                                onMove(it.chess + dragAmount)
-                            }
-                        }) {
-                    Text(it.chess.name)
-                }
+
+private fun Chess.checkAndMoveX(x: Int, others: List<Chess>): Chess {
+    others.filter { it.name != name }.forEach { other ->
+        when {
+            this isToLeftOf other -> {
+                if (this.right + x >= other.left) return moveToX(other.left - width)
+            }
+            this isToRightOf other -> {
+                if (this.left + x <= other.right) return moveToX(other.right)
             }
         }
-
     }
-
-
+    return moveByX(x)
 }
 
-private fun List<ChessOffset>.moveBy(chessOffset: ChessOffset) =
-    map {
-        if (it.chess == chessOffset.chess) {
-            it.chess + (chessOffset.offset + it.offset)
-        } else {
-            it
+private fun Chess.checkAndMoveY(y: Int, others: List<Chess>): Chess {
+    others.filter { it.name != name }.forEach { other ->
+        when {
+            this isAboveOf other -> {
+                if (this.bottom + y >= other.top) return moveToY(other.top - height)
+            }
+            this isBelowOf other -> {
+                if (this.top + y <= other.bottom) return moveToY(other.bottom)
+            }
+        }
+    }
+    return moveByY(y)
+}
+
+
+@Composable
+fun ChessBoard(
+    chessList: List<Chess>,
+    onRest: () -> Unit = {},
+    onMove: (cur: String, x: Int, y: Int) -> Unit = { _, _, _ -> }
+) {
+
+    val scope = rememberCoroutineScope()
+    with(LocalDensity.current) {
+
+        Box(Modifier.fillMaxSize()) {
+            Box(
+                Modifier
+                    .width(boardWidth.toDp())
+                    .height(boardHeight.toDp())
+                    .border(1.dp, Color.Cyan)
+                    .align(Alignment.TopCenter)
+            ) {
+                chessList.forEach { chess ->
+                    Box(
+                        Modifier
+                            .offset { chess.offset }
+                            .width(chess.width.toDp())
+                            .height(chess.height.toDp())
+                            .border(1.dp, Color.Black)
+                            .background(chess.color)
+                            .pointerInput(Unit) {
+                                scope.launch {
+                                    detectHorizontalDragGestures { change, dragAmount ->
+                                        change.consumeAllChanges()
+                                        onMove(chess.name, dragAmount.roundToInt(), 0)
+                                    }
+                                }
+                                scope.launch {
+                                    detectVerticalDragGestures { change, dragAmount ->
+                                        change.consumeAllChanges()
+                                        onMove(chess.name, 0, dragAmount.roundToInt())
+                                    }
+                                }
+
+                            }) {
+                        Text(chess.name)
+                    }
+                }
+            }
+
+            Button(onClick = onRest, modifier = Modifier.align(Alignment.BottomCenter)) {
+                Text(text = "reset")
+            }
+
         }
     }
 
-
-private fun List<ChessOffset>.detectBorder(chessOffset: ChessOffset) {
 
 }
 
@@ -114,7 +160,7 @@ private fun List<ChessOffset>.detectBorder(chessOffset: ChessOffset) {
 fun DefaultPreview() {
     ComposehuarongdaoTheme {
         ChessBoard(
-            chesses = startBoard.toOffset(2.75f),
+            chessList = opening.toList(),
         )
     }
 }
