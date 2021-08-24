@@ -20,8 +20,8 @@ sealed interface ChessAssets {
 }
 
 
-object LightChess : ChessAssets {
-    override val huangzhong = R.drawable.huagnzhong
+object DarkChess : ChessAssets {
+    override val huangzhong = R.drawable.huangzhong
     override val caocao = R.drawable.caocao
     override val zhaoyun = R.drawable.zhaoyun
     override val zhangfei = R.drawable.zhangfei
@@ -30,15 +30,26 @@ object LightChess : ChessAssets {
     override val zu = R.drawable.zu
 }
 
-object DarkChess : ChessAssets {
-    override val huangzhong = R.mipmap.huangzhong
-    override val caocao = R.mipmap.caocao
-    override val zhaoyun = R.mipmap.zhaoyun
-    override val zhangfei = R.mipmap.zhangfei
-    override val guanyu = R.mipmap.guanyu
-    override val machao = R.mipmap.machao
-    override val zu = R.mipmap.zu
+object LightChess : ChessAssets {
+    override val huangzhong = R.drawable.huagnzhong_2
+    override val caocao = R.drawable.caocao_2
+    override val zhaoyun = R.drawable.zhaoyun_2
+    override val zhangfei = R.drawable.zhangfei_2
+    override val guanyu = R.drawable.guanyu_2
+    override val machao = R.drawable.machao_2
+    override val zu = R.drawable.zu_2
 }
+
+object WoodChess : ChessAssets {
+    override val huangzhong = R.drawable.huangzhong_3
+    override val caocao = R.drawable.caocao_3
+    override val zhaoyun = R.drawable.zhaoyun_3
+    override val zhangfei = R.drawable.zhangfei_3
+    override val guanyu = R.drawable.guanyu_3
+    override val machao = R.drawable.machao_3
+    override val zu = R.drawable.zu_3
+}
+
 
 
 internal var LocalChessAssets = compositionLocalOf<ChessAssets> {

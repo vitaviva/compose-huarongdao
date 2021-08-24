@@ -21,6 +21,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.consumeAllChanges
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.dp
@@ -46,7 +47,7 @@ fun Density.ChessBoard(
                 .padding(10.dp)
                 .width(boardWidth.toDp())
                 .height(boardHeight.toDp())
-                .background(MaterialTheme.colors.secondary.copy(alpha = 0.2f))
+                .background(MaterialTheme.colors.secondary)
                 .align(Alignment.Center)
         ) {
             chessList.forEach { chess ->
@@ -71,7 +72,11 @@ fun Density.ChessBoard(
                             }
 
                         }) {
-                    Image(painter = painterResource(id = chess.assets()), contentDescription = "")
+                    Image(
+                        modifier = Modifier.fillMaxSize(),
+                        painter = painterResource(id = chess.assets()),
+                        contentDescription = ""
+                    )
                 }
             }
         }

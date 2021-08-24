@@ -3,14 +3,14 @@ package com.jetgame.huarongdao
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.Button
-import androidx.compose.material.Divider
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Surface
 import androidx.compose.material.Text
@@ -21,6 +21,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Density
@@ -32,15 +33,19 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
 
         setContent {
-            var isDark by remember { mutableStateOf(true) }
-            ComposehuarongdaoTheme(darkTheme = isDark) {
+            var theme by remember { mutableStateOf(0) }
+            ComposehuarongdaoTheme(theme = theme) {
                 // A surface container using the 'background' color from the theme
                 Surface(color = MaterialTheme.colors.background) {
 
                     Column {
                         Spacer(Modifier.height(20.dp))
 
-                        Text(modifier = Modifier.align(Alignment.CenterHorizontally), text = "华容道")
+                        Text(
+                            modifier = Modifier.align(Alignment.CenterHorizontally),
+                            text = "华容道",
+                            style = MaterialTheme.typography.h5
+                        )
                         var chessState: List<Chess> by remember {
                             mutableStateOf(opening.toList())
                         }
@@ -65,7 +70,7 @@ class MainActivity : ComponentActivity() {
                             Spacer(modifier = Modifier.width(10.dp))
 
                             Button(modifier = Modifier.weight(1f),
-                                onClick = { isDark = !isDark }) {
+                                onClick = { theme += 1 }) {
                                 Text("Theme")
                             }
 
@@ -96,7 +101,7 @@ fun GameScreen() {
 @Preview(showBackground = true)
 @Composable
 fun LightPreview() {
-    ComposehuarongdaoTheme {
+    ComposehuarongdaoTheme(0) {
         Density(2.7f, 1f).ChessBoard(
             chessList = opening.toList(),
         )
@@ -106,7 +111,18 @@ fun LightPreview() {
 @Preview(showBackground = true)
 @Composable
 fun DarkPreview() {
-    ComposehuarongdaoTheme(darkTheme = true) {
+    ComposehuarongdaoTheme(1) {
+        Density(2.7f, 1f).ChessBoard(
+            chessList = opening.toList(),
+        )
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun WoodPreview() {
+    ComposehuarongdaoTheme(2) {
+
         Density(2.7f, 1f).ChessBoard(
             chessList = opening.toList(),
         )
